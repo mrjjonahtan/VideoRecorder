@@ -95,10 +95,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
     var mMediaRecorder: MediaRecorder? = null
     var mVideoSize: Size? = null                                             //视频尺寸
-    var mSensorOrientation: Int? = null                                       //传感器方向
+    var mSensorOrientation: Int? = null                                      //传感器方向
 
 
-    //相机状态进行监听
+    //相机状态进行监听（回调函数）
     var stateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice?) {
             //获得摄像头
@@ -119,6 +119,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
     }
 
+    //预览回掉
     var sessioncall = object : CameraCaptureSession.StateCallback() {
         override fun onConfigureFailed(session: CameraCaptureSession?) {
             Log.e(Tag, " onConfigureFailed 开启预览失败")
@@ -161,8 +162,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
     }
 
+    //拍照回掉 当请求触发捕获开始以及捕获完成时，将调用此回调
     var captureCallback = object : CameraCaptureSession.CaptureCallback() {
 
+        //当图像捕获完全完成并且所有结果元数据都可用时，将调用此方法。
         override fun onCaptureCompleted(session: CameraCaptureSession?, request: CaptureRequest?, result: TotalCaptureResult?) {
             super.onCaptureCompleted(session, request, result)
             if (result != null) {
@@ -233,6 +236,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
                     text_hint.text = "先初始化哟"
                     return
                 }
+                //拍照
                 takePicture()
             }
             btn_init -> {
@@ -276,7 +280,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
     fun initfun() {
         getScreenBaseInfo()
-        imageFilePath = getDiskCacheDir(this)
+        imageFilePath = getDiskCacheDir(this)               //文件路径
 
         //角度
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90)
@@ -299,11 +303,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
         }
     }
 
+    //获得摄像头
     fun getDefaultCameraId(isCam: Boolean) {
         if (!isCam) {
             return
         }
-
         //获得CameraManager
         cameraManager = this.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         //初始化image
@@ -390,6 +394,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
         return choices[choices.size - 1]
     }
 
+    //请求权限
     fun checkPermisson() {
 
         if (Build.VERSION.SDK_INT < 23) {
@@ -418,6 +423,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
         }
     }
 
+    //打开摄像头并回调
     @SuppressLint("MissingPermission")
     fun openCamerafun() {
         //线程初始化
@@ -470,6 +476,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
             // 修改状态
             mState = STATE_WAITING_LOCK
 
+            //提交要由相机设备捕获的图像的请求
             mCaptureSession!!.capture(mPreviewRequestBuilder!!.build(), captureCallback, handler)
 
         } catch (e: Exception) {
@@ -510,6 +517,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
             if (cameraDevice == null) {
                 return
             }
+
             var mcaptureBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
 
             mcaptureBuilder!!.addTarget(imageReader!!.surface)
@@ -517,6 +525,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
             // 使用相同的AE和AF模式作为预览。
             mcaptureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
 
+            //回掉
             val mCaptureCallback = object : CameraCaptureSession.CaptureCallback() {
                 override fun onCaptureCompleted(session: CameraCaptureSession?, request: CaptureRequest?, result: TotalCaptureResult?) {
                     super.onCaptureCompleted(session, request, result)
@@ -558,7 +567,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
             //停止连续取景
             mCaptureSession!!.stopRepeating()
-
+            //设置Recorder
             setUpMediaRecorder()
             //设置Surface
             mPreviewRequestBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
@@ -657,7 +666,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
         //屏幕旋转方向
         var rotation = this.windowManager.defaultDisplay.rotation
-
         when (mSensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES -> {
                 mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation))
@@ -757,4 +765,3 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
     }
 
 }
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
