@@ -564,7 +564,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
             mPreviewRequestBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
             var recorderSurface = mMediaRecorder!!.surface
             var surfaces = ArrayList<Surface>()
-            surfaces.add(mSurfaceHolder!!.surface)
+            //surfaces.add(mSurfaceHolder!!.surface)
             surfaces.add(recorderSurface)
             //mPreviewRequestBuilder!!.addTarget(mSurfaceHolder!!.surface)
             mPreviewRequestBuilder!!.addTarget(recorderSurface)
@@ -608,14 +608,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
     //停止录制视频
     fun stopRecordingVideo() {
 
-        if(mMediaRecorder != null){
-            // Stop recording
-            mMediaRecorder!!.stop()
-            mMediaRecorder!!.release()
-            mMediaRecorder = null
+
+        try {
+            if(mMediaRecorder != null){
+
+                mMediaRecorder!!.setOnErrorListener(null)
+                mMediaRecorder!!.setOnInfoListener(null)
+                mMediaRecorder!!.setPreviewDisplay(null)
+                // Stop recording
+                mMediaRecorder!!.stop()
+
+                mMediaRecorder!!.release()
+                mMediaRecorder = null
+            }
+        }catch (e:Exception){
+            Log.e(Tag,e.message)
         }
 
-        unlockFocus()
+        //unlockFocus()
     }
 
     //设置视频参数
