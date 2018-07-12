@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">VideoRecorder</string>
+    <string name="videotape">录像</string>
+    <string name="stopVideotape">停止录像</string>
+    <string name="texthint">提示文字</string>
+    <string name="init">初始化</string>
+    <string name="cam">拍照</string>
+</resources>
