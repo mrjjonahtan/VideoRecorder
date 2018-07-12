@@ -662,7 +662,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
         mMediaRecorder!!.setVideoFrameRate(30)
         mMediaRecorder!!.setOutputFile(videoFilePath)
         mMediaRecorder!!.setVideoEncodingBitRate(10000000)
-        mMediaRecorder!!.setPreviewDisplay(mSurfaceHolder!!.surface)
+        //mMediaRecorder!!.setPreviewDisplay(mSurfaceHolder!!.surface)
 
         //屏幕旋转方向
         var rotation = this.windowManager.defaultDisplay.rotation
