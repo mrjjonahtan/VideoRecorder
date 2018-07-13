@@ -27,6 +27,7 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -63,7 +64,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
     val STATE_WAITING_LOCK: Int = 1                                         //对焦状态
     val STATE_PREVIEW: Int = 2                                              //预览状态
     val STATE_PICTURE_TAKEN: Int = 3                                        //准备拍照
-    val STATE_VIDEO: Int = 4                                                 //录视频
+    val STATE_VIDEO: Int = 4                                                //录视频
+    val STATE_CAPTURE:Int = 5                                               //拍照
 
     var mState: Int = 0                                                     //状态
     var isCamera: Boolean = false
@@ -137,6 +139,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
 
                 // 自动对焦应
                 mPreviewRequestBuilder!!.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                //mPreviewRequestBuilder!!.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
 
                 // 开启相机预览并添加事件
                 mPreviewRequest = mPreviewRequestBuilder!!.build()
@@ -156,11 +159,39 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
     /*静止图像已准备好保存。*/
     var monImageAvailableListener = object : ImageReader.OnImageAvailableListener {
         override fun onImageAvailable(reader: ImageReader?) {
-            //当图片可得到的时候获取图片并保存
-            handler!!.post(ImageSave(reader!!.acquireNextImage(), imageFilePath!!))
+            when(mState){
+                STATE_CAPTURE -> {
+                    //拍照
+                    //当图片可得到的时候获取图片并保存
+                    handler!!.post(ImageSave(reader!!.acquireNextImage(), imageFilePath!!))
+                }
+                STATE_PREVIEW -> {
+                    //帧数据
+                    //这里一定要调用reader.acquireNextImage()和img.close方法否则不会一直回掉了
+                    val img = reader!!.acquireNextImage()
+                    try {
+                        /**
+                         * //获取图片byte数组
+                         * Image.Plane[] planes = img.getPlanes();
+                         * ByteBuffer buffer = planes[0].getBuffer();
+                         * buffer.rewind();
+                         * byte[] data = new byte[buffer.capacity()];
+                         * buffer.get(data);
+                         */
+                        Log.e(Tag,"---->\n")
+
+                    }catch (e:Exception){
+                        Log.e(Tag,e.message)
+                    }
+                    img.close()
+                }
+
+            }
+
         }
 
     }
+
 
     //拍照回掉 当请求触发捕获开始以及捕获完成时，将调用此回调
     var captureCallback = object : CameraCaptureSession.CaptureCallback() {
@@ -202,7 +233,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
                         }
 
                     }
-
 
                 }
 
@@ -356,7 +386,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
         // 对于静态图像拍摄，使用最大的可用尺寸。
         //var largest:Size = Collections.max(arrayListOf(map.getOutputSizes(ImageFormat.JPEG)),9)
 
-        imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2)
+        imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1)
         imageReader!!.setOnImageAvailableListener(monImageAvailableListener, handler)
     }
 
@@ -452,6 +482,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
             //TEMPLATE_VIDEO_SNAPSHOT 在录制视频时创建适合静态图像捕获的请求。
             mPreviewRequestBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             mPreviewRequestBuilder!!.addTarget(mSurfaceHolder!!.surface)
+            mPreviewRequestBuilder!!.addTarget(imageReader!!.surface)
 
             //创建一个CameraCaptureSession来进行相机预览。
             cameraDevice!!.createCaptureSession(arrayListOf(mSurfaceHolder!!.surface, imageReader!!.surface), sessioncall, handler)
@@ -517,6 +548,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
             if (cameraDevice == null) {
                 return
             }
+            //改状态
+            mState = STATE_CAPTURE
 
             var mcaptureBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
 
@@ -765,3 +798,4 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, SurfaceHolder.Ca
     }
 
 }
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
